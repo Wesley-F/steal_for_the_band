@@ -30,6 +30,11 @@ YELLOW = (255, 255, 0)
 GREEN = (0, 255, 0)
 MANN_BLUE = (80, 163, 217)
 
+# stages
+START = 0
+PLAYING = 1
+END = 2
+
 # Images
 auditorium = pygame.image.load('stage.jpg')
 door = pygame.image.load('door.png')
@@ -205,6 +210,7 @@ keys = [key1]
 # Game loop
 win = False
 done = False
+stage = START
 
 while not done:
     # Event processing (React to key presses, mouse clicks, etc.)
@@ -213,109 +219,145 @@ while not done:
         if event.type == pygame.QUIT:
             done = True
 
-    pressed = pygame.key.get_pressed()
+        elif event.type == pygame.KEYDOWN:
 
-    player1_up = pressed[pygame.K_UP]
-    player1_down = pressed[pygame.K_DOWN]
-    player1_left = pressed[pygame.K_LEFT]
-    player1_right = pressed[pygame.K_RIGHT]
+            if stage == START:
+                if event.key == pygame.K_SPACE:
+                    stage = PLAYING
 
-    if player1_left:
-        vel1[0] = -player1_speed
-    elif player1_right:
-        vel1[0] = player1_speed
-    else:
-        vel1[0] = 0
+            elif stage == PLAYING:
+                pass
 
-    if player1_up:
-        vel1[1] = -player1_speed
-    elif player1_down:
-        vel1[1] = player1_speed
-    else:
-        vel1[1] = 0
+            elif stage == END:
+                if event.key == pygame.K_SPACE:
+                    print('GAME OVER')
+                    
+
+    if stage == PLAYING:
+        pressed = pygame.key.get_pressed()
+
+        player1_up = pressed[pygame.K_UP]
+        player1_down = pressed[pygame.K_DOWN]
+        player1_left = pressed[pygame.K_LEFT]
+        player1_right = pressed[pygame.K_RIGHT]
+
+        if player1_left:
+            vel1[0] = -player1_speed
+        elif player1_right:
+            vel1[0] = player1_speed
+        else:
+            vel1[0] = 0
+
+        if player1_up:
+            vel1[1] = -player1_speed
+        elif player1_down:
+            vel1[1] = player1_speed
+        else:
+            vel1[1] = 0
 
 
-    player2_up = pressed[pygame.K_w]
-    player2_down = pressed[pygame.K_s]
-    player2_left = pressed[pygame.K_a]
-    player2_right = pressed[pygame.K_d]
+        player2_up = pressed[pygame.K_w]
+        player2_down = pressed[pygame.K_s]
+        player2_left = pressed[pygame.K_a]
+        player2_right = pressed[pygame.K_d]
 
-    if player2_left:
-        vel2[0] = -player2_speed
-    elif player2_right:
-        vel2[0] = player2_speed
-    else:
-        vel2[0] = 0
+        if player2_left:
+            vel2[0] = -player2_speed
+        elif player2_right:
+            vel2[0] = player2_speed
+        else:
+            vel2[0] = 0
 
-    if player2_up:
-        vel2[1] = -player2_speed
-    elif player2_down:
-        vel2[1] = player2_speed
-    else:
-        vel2[1] = 0
-        
-        
+        if player2_up:
+            vel2[1] = -player2_speed
+        elif player2_down:
+            vel2[1] = player2_speed
+        else:
+            vel2[1] = 0
+       
     # Game logic (Check for collisions, update points, etc.)
-    ''' move the player in horizontal direction '''
-    player1[0] += vel1[0]
+    if stage == PLAYING:
+        ''' move the player in horizontal direction '''
+        player1[0] += vel1[0]
+        player2[0] += vel2[0]
 
-    ''' check doors '''
-    locked = check_doors()
+        ''' check doors '''
+        locked = check_doors()
 
-    ''' resolve collisions horizontally '''
-    
-    collidables = walls + locked
-    
-    for c in collidables:
-        if intersects.rect_rect(player1, c):        
-            if vel1[0] > 0:
-                player1[0] = c[0] - player1[2]
-            elif vel1[0] < 0:
-                player1[0] = c[0] + c[2]
-
-    ''' move the player in vertical direction '''
-    player1[1] += vel1[1]
-
-    ''' check doors '''
-    locked = check_doors()
+        ''' resolve collisions horizontally '''
         
-    ''' resolve collisions vertically '''
-    collidables = walls + locked
-
-    
-    for c in collidables:
-        if intersects.rect_rect(player1, c):                    
-            if vel1[1] > 0:
-                player1[1] = c[1] - player1[3]
-            if vel1[1]< 0:
-                player1[1] = c[1] + c[3]
-
-
-    ''' here is where you should resolve player collisions with screen edges '''
-
-
-
-
-    ''' get the coins '''   
-    hit_list = [c for c in coins if intersects.rect_rect(player1, c)]
-    
-    for hit in hit_list:
-        coins.remove(hit)
-        score1 += 1
-        print("sound!")
+        collidables = walls + locked
         
-    if len(coins) == 0:
-        win = True
+        for c in collidables:
+            if intersects.rect_rect(player1, c):        
+                if vel1[0] > 0:
+                    player1[0] = c[0] - player1[2]
+                elif vel1[0] < 0:
+                    player1[0] = c[0] + c[2]
 
-    ''' get the keys '''
-    keys_hit = [k for k in keys if intersects.rect_rect(player1, k)]
-    
-    for hit in keys_hit:
-        keys.remove(hit)
-        num_keys += 1
-        print("sound!")
+        for w in walls:
+            if intersects.rect_rect(player2, w):
+                if vel2[0] > 0:
+                    player2[0] = w[0] - player2[2]
+                elif vel2[0] < 0:
+                    player2[0] = w[0] + w[2]
+
+        ''' move the player in vertical direction '''
+        player1[1] += vel1[1]
+        player2[1] += vel2[1]
+
+        ''' check doors '''
+        locked = check_doors()
+            
+        ''' resolve collisions vertically '''
+        collidables = walls + locked
 
         
+        for c in collidables:
+            if intersects.rect_rect(player1, c):                    
+                if vel1[1] > 0:
+                    player1[1] = c[1] - player1[3]
+                if vel1[1]< 0:
+                    player1[1] = c[1] + c[3]
+
+        for w in walls:
+            if intersects.rect_rect(player2, w):                    
+                if vel2[1] > 0:
+                    player2[1] = w[1] - player2[3]
+                if vel2[1]< 0:
+                    player2[1] = w[1] + w[3]
+                    
+        ''' check to see if player is caught '''
+
+        if intersects.rect_rect(player1, player2):
+            print("Gotcha!!!")
+        
+
+        ''' here is where you should resolve player collisions with screen edges '''
+
+
+
+
+        ''' get the coins '''   
+        hit_list = [c for c in coins if intersects.rect_rect(player1, c)]
+        
+        for hit in hit_list:
+            coins.remove(hit)
+            score1 += 1
+            print("sound!")
+            
+        if len(coins) == 0:
+            win = True
+
+        ''' get the keys '''
+        keys_hit = [k for k in keys if intersects.rect_rect(player1, k)]
+        
+        for hit in keys_hit:
+            keys.remove(hit)
+            num_keys += 1
+            print("sound!")
+
+            
     # Drawing code (Describe the picture. It isn't actually drawn yet.)
     screen.fill(BLACK)
 
